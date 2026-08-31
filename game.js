@@ -72,7 +72,6 @@
   const KEY = {
     best: 'bichiku.best',
     nick: 'bichiku.nickname',
-    rank: 'bichiku.ranking',
     mute: 'bichiku.mute'
   };
 
@@ -87,21 +86,54 @@
   }
 
   /* =======================================================
-     3. ランキング API
+     3. ランキング API (GAS / 署名付き通信)
      ======================================================= */
+  const GAS_URL = 'https://script.google.com/macros/s/AKfycbzjT8FHlrCMwiST03ZqELqq1TcQ7xbnVx10B84PA6HpH4lK31S85tLzGeQv08tfzTqA/exec';
+  const API_SECRET = 'BICHIKU_2026_SECRET_KEY'; // GAS側の設定と同一にするキー
+
+  async function generateSignature(name, score, startTime) {
+    const text = `${name}:${score}:${startTime}:${API_SECRET}`;
+    const enc = new TextEncoder();
+    const data = enc.encode(text);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(hashBuffer))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+  }
+
   async function submitScore(name, score) {
+    if (!GAS_URL || GAS_URL.includes('ここにデプロイID')) return false;
     try {
-      const list = loadJSON(KEY.rank, []);
-      list.push({ name: name || 'GUEST', score: score, at: Date.now() });
-      list.sort((a, b) => b.score - a.score);
-      saveJSON(KEY.rank, list.slice(0, 20));
+      const playerName = name || 'GUEST';
+      const signature = await generateSignature(playerName, score, State.gameStartedAt);
+
+      await fetch(GAS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' }, // CORS回避
+        body: JSON.stringify({
+          name: playerName,
+          score: score,
+          startTime: State.gameStartedAt,
+          signature: signature
+        })
+      });
       return true;
-    } catch (e) { return false; }
+    } catch (e) {
+      console.error('GAS submit error:', e);
+      return false;
+    }
   }
 
   async function getRanking(limit) {
-    const list = loadJSON(KEY.rank, []);
-    return list.slice(0, limit || 10);
+    if (!GAS_URL || GAS_URL.includes('ここにデプロイID')) return [];
+    try {
+      const res = await fetch(GAS_URL);
+      const list = await res.json();
+      return Array.isArray(list) ? list.slice(0, limit || 10) : [];
+    } catch (e) {
+      console.error('GAS fetch ranking error:', e);
+      return [];
+    }
   }
 
   /* =======================================================
@@ -246,6 +278,7 @@
     score: 0,
     best: loadJSON(KEY.best, 0),
     nickname: loadJSON(KEY.nick, ''),
+    gameStartedAt: 0,
     currentLevel: 0,
     nextLevel: 0,
     aimX: W / 2,
@@ -840,7 +873,6 @@
 
     if (State.mode === 'playing') {
       if (engine) {
-        // トンネリング防止のためサブステップ実行
         Matter.Engine.update(engine, 1000 / 120);
         Matter.Engine.update(engine, 1000 / 120);
       }
@@ -889,6 +921,7 @@
     State.aimX = W / 2;
     State.canDrop = true;
     State.lastDropAt = clock;
+    State.gameStartedAt = Date.now(); // プレイ開始時刻の記録
     State.currentLevel = randomLevel();
     State.nextLevel = randomLevel();
     ui.score.textContent = pad5(0);
@@ -918,6 +951,7 @@
     if (isNew) saveJSON(KEY.best, State.score);
     State.best = Math.max(State.best, State.score);
 
+    // オンライン（GAS）へスコア送信
     await submitScore(State.nickname || 'GUEST', State.score);
 
     ui.final.textContent = pad5(State.score);
@@ -980,17 +1014,27 @@
   }
 
   async function buildRanking() {
-    const list = await getRanking(10);
     const box = $('#rank-list');
     if (!box) return;
     box.textContent = '';
-    if (!list.length) {
+    
+    // 読み込み中表示
+    const loadingLi = document.createElement('li');
+    loadingLi.className = 'rank-empty';
+    loadingLi.textContent = 'ランキングを取得中...';
+    box.appendChild(loadingLi);
+
+    const list = await getRanking(10);
+    box.textContent = '';
+
+    if (!list || !list.length) {
       const li = document.createElement('li');
       li.className = 'rank-empty';
       li.textContent = 'まだ記録がありません。遊んで1位を取ろう。';
       box.appendChild(li);
       return;
     }
+
     list.forEach(function (row, i) {
       const li = document.createElement('li');
       const no = document.createElement('span');
@@ -1034,10 +1078,10 @@
     play: requestPlay,
     howto: function () { showScreen('howto'); },
     ranking: async function () {
-      await buildRanking();
       closeAllOverlays();
       showScreen('ranking');
       State.mode = 'title';
+      await buildRanking();
     },
     top: function () {
       closeAllOverlays();
