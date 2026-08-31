@@ -13,36 +13,38 @@
     wall: 12,
     floor: 34,
     dropY: 76,
-    dangerLine: 138,
+    dangerLine: 155,       // ラインを少し下げて緊張感を強化
 
-    gameOverDelay: 2200,
-    dropCooldown: 430,
-    chainWindow: 950,
+    gameOverDelay: 1500,   // 危険ライン超え時の猶予を1.5秒に短縮
+    dropCooldown: 400,
+    chainWindow: 800,      // 連鎖の受付時間を短縮
 
-    chainMultipliers: [1, 1, 1.2, 1.5, 1.8, 2.0, 2.5],
-    spawnWeights: [55, 30, 15],
+    // 連鎖コンボのリターンを強化
+    chainMultipliers: [1.0, 1.0, 1.3, 1.7, 2.2, 3.0, 4.0],
+    // 低確率でモバイルバッテリー(Lv3)が混ざるように調整
+    spawnWeights: [45, 32, 18, 5],
 
     physics: {
-      gravity: 1.0,           // 隙間へ押し込む重力
-      restitution: 0.08,      // 跳ね返りを抑えて隙間に自然に沈める
-      friction: 0.02,         // 摩擦を大幅に低減し滑り込みやすくする
-      frictionStatic: 0.03,   // 静止摩擦を下げて途中の引っかかりを防止
-      density: 0.0025,        // 密度
-      airFriction: 0.003,     // 空気抵抗を下げてスムーズに沈降
-      slop: 0.01
+      gravity: 0.95,
+      restitution: 0.05,     // 反発を抑えて跳ねすぎを抑制
+      friction: 0.08,        // 勝手に隙間へ転がり込みすぎない適度な引っかかり
+      frictionStatic: 0.12,
+      density: 0.003,
+      airFriction: 0.008,
+      slop: 0.02
     },
 
     maxParticles: 150,
 
     items: [
-      { key: 'bandage',             name: '絆創膏',             short: '絆創膏',   size: 45,  score: 10,    color: '#F6C89B' },
-      { key: 'firstaid',            name: '救急セット',         short: '救急',     size: 55,  score: 30,    color: '#F4645C' },
-      { key: 'light',               name: 'ライト',             short: 'ライト',   size: 65,  score: 60,    color: '#F9CE5F' },
-      { key: 'battery',             name: 'モバイルバッテリー', short: 'バッテリー', size: 75, score: 120,   color: '#F6A8AF' },
-      { key: 'food',                name: '非常食セット',       short: '非常食',   size: 90,  score: 250,   color: '#A6C486' },
-      { key: 'backpack',            name: '防災リュック',       short: 'リュック', size: 105, score: 500,   color: '#F0574E' },
+      { key: 'bandage',             name: '絆創膏',             short: '絆創膏',   size: 45,  score: 5,     color: '#F6C89B' },
+      { key: 'firstaid',            name: '救急セット',         short: '救急',     size: 55,  score: 15,    color: '#F4645C' },
+      { key: 'light',               name: 'ライト',             short: 'ライト',   size: 65,  score: 40,    color: '#F9CE5F' },
+      { key: 'battery',             name: 'モバイルバッテリー', short: 'バッテリー', size: 75, score: 90,    color: '#F6A8AF' },
+      { key: 'food',                name: '非常食セット',       short: '非常食',   size: 90,  score: 200,   color: '#A6C486' },
+      { key: 'backpack',            name: '防災リュック',       short: 'リュック', size: 105, score: 450,   color: '#F0574E' },
       { key: 'home-stockpile',      name: '家庭備蓄',           short: '家庭備蓄', size: 125, score: 1000,  color: '#E0AE79' },
-      { key: 'community-stockpile', name: '地域備蓄庫',         short: '地域備蓄', size: 150, score: 3000,  color: '#F2A03D' },
+      { key: 'community-stockpile', name: '地域備蓄庫',         short: '地域備蓄', size: 150, score: 2500,  color: '#F2A03D' },
       { key: 'city-hall',           name: '防災拠点役所',       short: '防災拠点', size: 175, score: 6000,  color: '#6AAFE6' }
     ],
 
@@ -316,7 +318,7 @@
     engine.velocityIterations = 16;
     world = engine.world;
 
-    const staticOpts = { isStatic: true, friction: 0.04, restitution: 0.05, label: 'wall' };
+    const staticOpts = { isStatic: true, friction: 0.1, restitution: 0.05, label: 'wall' };
     const wallThickness = 400;
     const floorThickness = 400;
 
@@ -345,7 +347,7 @@
     if (!world) return null;
     const item = CONFIG.items[level];
     const visualR = item.size / 2;
-    // 物理コライダーを90%にして隙間なく密着させる
+    // 物理コライダーを90%にして隙間を埋める
     const colliderR = visualR * 0.90;
     const p = CONFIG.physics;
     
@@ -420,7 +422,7 @@
       const mult = CONFIG.chainMultipliers[Math.min(State.chain, CONFIG.chainMultipliers.length - 1)];
 
       if (currentLevel === MAX_LEVEL) {
-        // 最高ランク（防災拠点役所）どうしの合体ボーナス
+        // 最高ランク（防災拠点役所）合体時の全消去ボーナス
         const clearGain = Math.round(10000 * mult);
         addScore(clearGain);
         State.floats.push({ x: x, y: y, text: 'PERFECT! +' + clearGain, life: 1300, max: 1300 });
