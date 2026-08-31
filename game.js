@@ -13,21 +13,19 @@
     wall: 12,
     floor: 34,
     dropY: 76,
-    dangerLine: 155,       // ラインを少し下げて緊張感を強化
+    dangerLine: 155,
 
-    gameOverDelay: 1500,   // 危険ライン超え時の猶予を1.5秒に短縮
+    gameOverDelay: 1500,
     dropCooldown: 400,
-    chainWindow: 800,      // 連鎖の受付時間を短縮
+    chainWindow: 800,
 
-    // 連鎖コンボのリターンを強化
     chainMultipliers: [1.0, 1.0, 1.3, 1.7, 2.2, 3.0, 4.0],
-    // 低確率でモバイルバッテリー(Lv3)が混ざるように調整
     spawnWeights: [45, 32, 18, 5],
 
     physics: {
       gravity: 0.95,
-      restitution: 0.05,     // 反発を抑えて跳ねすぎを抑制
-      friction: 0.08,        // 勝手に隙間へ転がり込みすぎない適度な引っかかり
+      restitution: 0.05,
+      friction: 0.08,
       frictionStatic: 0.12,
       density: 0.003,
       airFriction: 0.008,
@@ -37,15 +35,51 @@
     maxParticles: 150,
 
     items: [
-      { key: 'bandage',             name: '絆創膏',             short: '絆創膏',   size: 45,  score: 5,     color: '#F6C89B' },
-      { key: 'firstaid',            name: '救急セット',         short: '救急',     size: 55,  score: 15,    color: '#F4645C' },
-      { key: 'light',               name: 'ライト',             short: 'ライト',   size: 65,  score: 40,    color: '#F9CE5F' },
-      { key: 'battery',             name: 'モバイルバッテリー', short: 'バッテリー', size: 75, score: 90,    color: '#F6A8AF' },
-      { key: 'food',                name: '非常食セット',       short: '非常食',   size: 90,  score: 200,   color: '#A6C486' },
-      { key: 'backpack',            name: '防災リュック',       short: 'リュック', size: 105, score: 450,   color: '#F0574E' },
-      { key: 'home-stockpile',      name: '家庭備蓄',           short: '家庭備蓄', size: 125, score: 1000,  color: '#E0AE79' },
-      { key: 'community-stockpile', name: '地域備蓄庫',         short: '地域備蓄', size: 150, score: 2500,  color: '#F2A03D' },
-      { key: 'city-hall',           name: '防災拠点役所',       short: '防災拠点', size: 175, score: 6000,  color: '#6AAFE6' }
+      { 
+        key: 'bandage', name: '絆創膏', short: '絆創膏', size: 45, score: 5, color: '#F6C89B',
+        tip: '小さなキズの保護に。避難ポーチに常備必須！',
+        zukan: '避難時の靴擦れや小さなケガの応急処置に欠かせません。防水タイプが便利です。'
+      },
+      { 
+        key: 'firstaid', name: '救急セット', short: '救急', size: 55, score: 15, color: '#F4645C',
+        tip: '常備薬やハサミ・ガーゼも一緒にまとめておこう！',
+        zukan: '消毒液・ガーゼ・包帯・持病の常備薬・お薬手帳のコピーをひとまとめに保管しましょう。'
+      },
+      { 
+        key: 'light', name: 'ライト', short: 'ライト', size: 65, score: 40, color: '#F9CE5F',
+        tip: '停電時は足元の安全確保！枕元と玄関に常備。',
+        zukan: '停電時の移動用。両手が自由に使えるヘッドライトやランタン型も非常におすすめです。'
+      },
+      { 
+        key: 'battery', name: 'モバイルバッテリー', short: 'バッテリー', size: 75, score: 90, color: '#F6A8AF',
+        tip: 'スマホは命綱。月1回の定期充電を忘れずに！',
+        zukan: '災害時の情報収集・安否確認の要。自然放電するため、月に1度は満充電にしておきます。'
+      },
+      { 
+        key: 'food', name: '非常食セット', short: '非常食', size: 90, score: 200, color: '#A6C486',
+        tip: '普段食べるものを少し多めに買い置くローリングストック！',
+        zukan: 'アルファ米・レトルト食品・缶詰など。食べ慣れた味を備えておくことが心の安定にも繋がります。'
+      },
+      { 
+        key: 'backpack', name: '防災リュック', short: 'リュック', size: 105, score: 450, color: '#F0574E',
+        tip: '重さは体重の15〜20%！背負って走れる重さに。',
+        zukan: '一次避難用。貴重品・水・携帯トイレ・雨具などを入れ、玄関や寝室のすぐ近くに置きます。'
+      },
+      { 
+        key: 'home-stockpile', name: '家庭備蓄', short: '家庭備蓄', size: 125, score: 1000, color: '#E0AE79',
+        tip: '水は1人1日3L×最低3日分（できれば1週間分）！',
+        zukan: '自宅避難（在宅避難）用の備蓄。カセットコンロ・トイレットペーパー・生活用水も備えます。'
+      },
+      { 
+        key: 'community-stockpile', name: '地域備蓄庫', short: '地域備蓄', size: 150, score: 2500, color: '#F2A03D',
+        tip: '地域の備蓄倉庫・避難所の場所をハザードマップで確認！',
+        zukan: '自治体や自治会が管理する倉庫。大型発電機や救出工具、避難生活用の物資が保管されています。'
+      },
+      { 
+        key: 'city-hall', name: '防災拠点役所', short: '防災拠点', size: 175, score: 6000, color: '#6AAFE6',
+        tip: 'デマに注意！災害時は役所や自治体の一次情報を確認。',
+        zukan: '災害対策本部が置かれる地域の司令塔。避難所開設や物資配分、正確な情報発信を行います。'
+      }
     ],
 
     messages: [
@@ -226,6 +260,7 @@
   const screens = {
     title:   $('#s-title'),
     howto:   $('#s-howto'),
+    zukan:   $('#s-zukan'),
     ranking: $('#s-ranking'),
     game:    $('#s-game')
   };
@@ -244,7 +279,9 @@
     final:     $('#ui-final'),
     finalBest: $('#ui-final-best'),
     newBest:   $('#ui-newbest'),
+    rankBadge: $('#ui-rank-badge'),
     tip:       $('#ui-tip'),
+    toast:     $('#ui-toast'),
     chain:     $('#fx-chain'),
     fxMax:     $('#fx-max'),
     fxMaxJp:   $('#fx-max-text-jp'),
@@ -254,21 +291,33 @@
 
   function showScreen(name) {
     Object.keys(screens).forEach(function (k) {
-      screens[k].classList.toggle('is-active', k === name);
+      if (screens[k]) screens[k].classList.toggle('is-active', k === name);
     });
   }
-  function openOverlay(name) { overlays[name].classList.add('is-active'); }
-  function closeOverlay(name) { overlays[name].classList.remove('is-active'); }
+  function openOverlay(name) { if (overlays[name]) overlays[name].classList.add('is-active'); }
+  function closeOverlay(name) { if (overlays[name]) overlays[name].classList.remove('is-active'); }
   function closeAllOverlays() {
-    Object.keys(overlays).forEach(function (k) { overlays[k].classList.remove('is-active'); });
+    Object.keys(overlays).forEach(function (k) { if (overlays[k]) overlays[k].classList.remove('is-active'); });
   }
 
   function pad5(n) { return String(Math.floor(n)).padStart(5, '0'); }
 
   function bump(el) {
+    if (!el) return;
     el.classList.remove('is-bump');
     void el.offsetWidth;
     el.classList.add('is-bump');
+  }
+
+  let toastTimer = null;
+  function showToast(text) {
+    if (!ui.toast) return;
+    ui.toast.textContent = '💡 ' + text;
+    ui.toast.classList.add('is-active');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () {
+      ui.toast.classList.remove('is-active');
+    }, 2800);
   }
 
   /* =======================================================
@@ -284,6 +333,7 @@
     gameStartedAt: 0,
     currentLevel: 0,
     nextLevel: 0,
+    highestLevel: 0,
     aimX: W / 2,
     canDrop: true,
     lastDropAt: 0,
@@ -347,7 +397,6 @@
     if (!world) return null;
     const item = CONFIG.items[level];
     const visualR = item.size / 2;
-    // 物理コライダーを90%にして隙間を埋める
     const colliderR = visualR * 0.90;
     const p = CONFIG.physics;
     
@@ -422,7 +471,6 @@
       const mult = CONFIG.chainMultipliers[Math.min(State.chain, CONFIG.chainMultipliers.length - 1)];
 
       if (currentLevel === MAX_LEVEL) {
-        // 最高ランク（防災拠点役所）合体時の全消去ボーナス
         const clearGain = Math.round(10000 * mult);
         addScore(clearGain);
         State.floats.push({ x: x, y: y, text: 'PERFECT! +' + clearGain, life: 1300, max: 1300 });
@@ -430,6 +478,11 @@
         celebrateClearMax(x, y);
       } else {
         const level = currentLevel + 1;
+        if (level > State.highestLevel) {
+          State.highestLevel = level;
+          showToast(CONFIG.items[level].tip);
+        }
+
         const born = createItem(level, x, y);
         if (born) {
           born.pop = 1;
@@ -456,15 +509,18 @@
 
   function addScore(v) {
     State.score += v;
-    ui.score.textContent = pad5(State.score);
-    bump(ui.score);
+    if (ui.score) {
+      ui.score.textContent = pad5(State.score);
+      bump(ui.score);
+    }
     if (State.score > State.best) {
       State.best = State.score;
-      ui.best.textContent = pad5(State.best);
+      if (ui.best) ui.best.textContent = pad5(State.best);
     }
   }
 
   function showChain(n) {
+    if (!ui.chain) return;
     ui.chain.textContent = 'CHAIN ×' + n;
     ui.chain.classList.remove('is-on');
     void ui.chain.offsetWidth;
@@ -475,10 +531,12 @@
     Sound.max();
     if (ui.fxMaxJp) ui.fxMaxJp.textContent = '防災拠点 役所 完成！';
     if (ui.fxMaxEn) ui.fxMaxEn.textContent = 'DISASTER HQ COMPLETED!';
-    ui.fxMax.classList.remove('is-on');
-    void ui.fxMax.offsetWidth;
-    ui.fxMax.classList.add('is-on');
-    setTimeout(function () { ui.fxMax.classList.remove('is-on'); }, 2100);
+    if (ui.fxMax) {
+      ui.fxMax.classList.remove('is-on');
+      void ui.fxMax.offsetWidth;
+      ui.fxMax.classList.add('is-on');
+      setTimeout(function () { ui.fxMax.classList.remove('is-on'); }, 2100);
+    }
 
     const colors = ['#6AAFE6', '#FFD24A', '#FF9B2F', '#FFF7E8'];
     for (let i = 0; i < 50; i++) {
@@ -500,10 +558,12 @@
     Sound.clearMax();
     if (ui.fxMaxJp) ui.fxMaxJp.textContent = '地域防災 完全制覇！ PERFECT!';
     if (ui.fxMaxEn) ui.fxMaxEn.textContent = 'ALL HQ CLEARED! +10000';
-    ui.fxMax.classList.remove('is-on');
-    void ui.fxMax.offsetWidth;
-    ui.fxMax.classList.add('is-on');
-    setTimeout(function () { ui.fxMax.classList.remove('is-on'); }, 2100);
+    if (ui.fxMax) {
+      ui.fxMax.classList.remove('is-on');
+      void ui.fxMax.offsetWidth;
+      ui.fxMax.classList.add('is-on');
+      setTimeout(function () { ui.fxMax.classList.remove('is-on'); }, 2100);
+    }
 
     const colors = ['#6AAFE6', '#FFD24A', '#FF5A4E', '#8FBF6E', '#FFFDF7'];
     for (let i = 0; i < 70; i++) {
@@ -619,7 +679,7 @@
   }
 
   function draw() {
-    if (!screens.game.classList.contains('is-active')) return;
+    if (!screens.game || !screens.game.classList.contains('is-active')) return;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, W, H);
 
@@ -673,7 +733,7 @@
     ctx.textBaseline = 'bottom';
     ctx.fillText('DANGER LINE', CONFIG.wall + 4, CONFIG.dangerLine - 5);
 
-    // ガイド＆手元の待機アイテム
+    // ガイド＆待機アイテム
     if (State.mode === 'playing') {
       const r = CONFIG.items[State.currentLevel].size / 2;
       ctx.save();
@@ -803,17 +863,22 @@
 
   function dropItem() {
     if (State.mode !== 'playing' || !State.canDrop) return;
-    Sound.unlock();
-
-    createItem(State.currentLevel, State.aimX, CONFIG.dropY);
-    Sound.drop();
-
-    State.currentLevel = State.nextLevel;
-    State.nextLevel = randomLevel();
-    updateNextUI();
-
+    
     State.canDrop = false;
     State.lastDropAt = clock;
+    Sound.unlock();
+
+    // 1. 今手元にある currentLevel を確実に落とす
+    const dropLv = State.currentLevel;
+    createItem(dropLv, State.aimX, CONFIG.dropY);
+    Sound.drop();
+
+    // 2. NEXTに表示されていたアイテムを手元へ昇格
+    State.currentLevel = State.nextLevel;
+
+    // 3. 次のNEXTアイテムを新規抽選してUI更新
+    State.nextLevel = randomLevel();
+    updateNextUI();
   }
 
   function randomLevel() {
@@ -829,6 +894,7 @@
   }
 
   function updateNextUI() {
+    if (!ui.next) return;
     ui.next.textContent = '';
     ui.next.appendChild(itemNode(State.nextLevel, 34));
   }
@@ -913,6 +979,14 @@
   /* =======================================================
      14. ゲームの開始・終了
      ======================================================= */
+  function getRankBadge(level) {
+    if (level >= 8) return '🎖️ 地域防災リーダー（役所開設）';
+    if (level >= 7) return '📦 地区備蓄エキスパート（地域倉庫）';
+    if (level >= 6) return '🏠 家庭備蓄マスター（1週間分達成）';
+    if (level >= 4) return '🎒 おうち避難準備マスター';
+    return '🌱 そなえビギナー（携帯防災ポーチ）';
+  }
+
   function resetBoard() {
     if (world) {
       for (let i = State.items.length - 1; i >= 0; i--) Composite.remove(world, State.items[i]);
@@ -926,16 +1000,21 @@
     State.lastMergeAt = 0;
     State.dangerTimer = 0;
     State.aimX = W / 2;
-    State.canDrop = true;
-    State.lastDropAt = clock;
+    State.highestLevel = 0;
     State.gameStartedAt = Date.now();
+
     State.currentLevel = randomLevel();
     State.nextLevel = randomLevel();
-    ui.score.textContent = pad5(0);
-    ui.best.textContent = pad5(State.best);
-    ui.chain.classList.remove('is-on');
+
+    if (ui.score) ui.score.textContent = pad5(0);
+    if (ui.best) ui.best.textContent = pad5(State.best);
+    if (ui.chain) ui.chain.classList.remove('is-on');
     if (ui.fxMax) ui.fxMax.classList.remove('is-on');
+
     updateNextUI();
+
+    State.canDrop = true;
+    State.lastDropAt = clock;
   }
 
   function startGame() {
@@ -960,10 +1039,11 @@
 
     await submitScore(State.nickname || 'GUEST', State.score);
 
-    ui.final.textContent = pad5(State.score);
-    ui.finalBest.textContent = pad5(State.best);
-    ui.newBest.hidden = !isNew;
-    ui.tip.textContent = CONFIG.messages[Math.floor(Math.random() * CONFIG.messages.length)];
+    if (ui.final) ui.final.textContent = pad5(State.score);
+    if (ui.finalBest) ui.finalBest.textContent = pad5(State.best);
+    if (ui.newBest) ui.newBest.hidden = !isNew;
+    if (ui.rankBadge) ui.rankBadge.textContent = getRankBadge(State.highestLevel);
+    if (ui.tip) ui.tip.textContent = CONFIG.messages[Math.floor(Math.random() * CONFIG.messages.length)];
 
     setTimeout(function () { openOverlay('gameover'); }, 520);
   }
@@ -1019,6 +1099,37 @@
     });
   }
 
+  function buildZukan() {
+    const box = $('#zukan-list');
+    if (!box) return;
+    box.textContent = '';
+    CONFIG.items.forEach(function (item, i) {
+      const card = document.createElement('div');
+      card.className = 'zukan-card';
+      
+      const icon = document.createElement('div');
+      icon.className = 'zukan-icon';
+      icon.appendChild(itemNode(i, 46));
+      
+      const info = document.createElement('div');
+      info.className = 'zukan-info';
+      
+      const title = document.createElement('div');
+      title.className = 'zukan-title';
+      title.textContent = `Lv.${i + 1} ${item.name}`;
+      
+      const desc = document.createElement('div');
+      desc.className = 'zukan-desc';
+      desc.textContent = item.zukan;
+      
+      info.appendChild(title);
+      info.appendChild(desc);
+      card.appendChild(icon);
+      card.appendChild(info);
+      box.appendChild(card);
+    });
+  }
+
   async function buildRanking() {
     const box = $('#rank-list');
     if (!box) return;
@@ -1062,8 +1173,8 @@
   let confirmCallback = null;
 
   function askConfirm(title, text, onYes) {
-    $('#confirm-title').textContent = title;
-    $('#confirm-text').textContent = text;
+    if ($('#confirm-title')) $('#confirm-title').textContent = title;
+    if ($('#confirm-text')) $('#confirm-text').textContent = text;
     confirmCallback = onYes;
     openOverlay('confirm');
   }
@@ -1071,9 +1182,9 @@
   function requestPlay() {
     Sound.unlock();
     if (!State.nickname) {
-      $('#input-nickname').value = '';
+      if ($('#input-nickname')) $('#input-nickname').value = '';
       openOverlay('nickname');
-      setTimeout(function () { $('#input-nickname').focus(); }, 60);
+      setTimeout(function () { if ($('#input-nickname')) $('#input-nickname').focus(); }, 60);
     } else {
       startGame();
     }
@@ -1082,6 +1193,10 @@
   const actions = {
     play: requestPlay,
     howto: function () { showScreen('howto'); },
+    zukan: function () {
+      buildZukan();
+      showScreen('zukan');
+    },
     ranking: async function () {
       closeAllOverlays();
       showScreen('ranking');
@@ -1101,7 +1216,7 @@
       });
     },
     'nickname-ok': function () {
-      const v = $('#input-nickname').value.trim().slice(0, 10);
+      const v = $('#input-nickname') ? $('#input-nickname').value.trim().slice(0, 10) : '';
       State.nickname = v || 'GUEST';
       saveJSON(KEY.nick, State.nickname);
       startGame();
@@ -1135,21 +1250,30 @@
     fn();
   });
 
-  $('#btn-pause').addEventListener('click', function () {
-    if (State.mode === 'playing' || State.mode === 'paused') { Sound.ui(); togglePause(); }
-  });
+  const pauseBtn = $('#btn-pause');
+  if (pauseBtn) {
+    pauseBtn.addEventListener('click', function () {
+      if (State.mode === 'playing' || State.mode === 'paused') { Sound.ui(); togglePause(); }
+    });
+  }
 
-  $('#btn-sound').addEventListener('click', function () {
-    Sound.unlock();
-    Sound.muted = !Sound.muted;
-    saveJSON(KEY.mute, Sound.muted);
-    ui.sound.textContent = Sound.muted ? '🔇' : '🔊';
-    if (!Sound.muted) Sound.ui();
-  });
+  const soundBtn = $('#btn-sound');
+  if (soundBtn) {
+    soundBtn.addEventListener('click', function () {
+      Sound.unlock();
+      Sound.muted = !Sound.muted;
+      saveJSON(KEY.mute, Sound.muted);
+      if (ui.sound) ui.sound.textContent = Sound.muted ? '🔇' : '🔊';
+      if (!Sound.muted) Sound.ui();
+    });
+  }
 
-  $('#input-nickname').addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') actions['nickname-ok']();
-  });
+  const inputNick = $('#input-nickname');
+  if (inputNick) {
+    inputNick.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') actions['nickname-ok']();
+    });
+  }
 
   /* =======================================================
      17. 起動
@@ -1158,11 +1282,10 @@
     initPhysics();
     buildTitleArt();
     buildChainChart();
-    ui.best.textContent = pad5(State.best);
-    ui.sound.textContent = Sound.muted ? '🔇' : '🔊';
-    State.currentLevel = randomLevel();
-    State.nextLevel = randomLevel();
-    updateNextUI();
+    if (ui.best) ui.best.textContent = pad5(State.best);
+    if (ui.sound) ui.sound.textContent = Sound.muted ? '🔇' : '🔊';
+    
+    resetBoard();
     showScreen('title');
   }
   boot();
