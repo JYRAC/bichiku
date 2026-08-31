@@ -494,7 +494,7 @@ input { font-family: inherit; }
   100% { opacity: 0; }
 }
 
-/* オーバーレイ */
+/* オーバーレイ共通 */
 .overlay {
   position: absolute; inset: 0;
   display: none; align-items: center; justify-content: center;
@@ -576,6 +576,49 @@ input { font-family: inherit; }
   color: var(--ink-soft);
 }
 .tip-text { margin: 0; font-size: .82rem; line-height: 1.7; }
+
+/* 防災クイズモーダル */
+.card--quiz {
+  max-width: 360px;
+  border-color: var(--orange);
+}
+.quiz-badge {
+  display: inline-block;
+  background: var(--red);
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.72rem;
+  padding: 4px 10px;
+  border-radius: 999px;
+  margin-bottom: 8px;
+}
+.quiz-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 14px 0 6px;
+}
+.btn--quiz-opt {
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  font-size: 0.85rem;
+  padding: 0.65em 0.8em;
+  text-align: left;
+  justify-content: flex-start;
+  box-shadow: var(--shadow-1);
+}
+.btn--quiz-opt:hover {
+  background: var(--cream-deep);
+}
+.quiz-feedback {
+  margin-top: 10px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+.quiz-feedback.is-correct { color: #2e7d32; }
+.quiz-feedback.is-wrong { color: var(--red); }
 
 /* アクセシビリティ */
 @media (prefers-reduced-motion: reduce) {
