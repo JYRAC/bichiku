@@ -319,7 +319,6 @@
     const wallThickness = 400;
     const floorThickness = 400;
 
-    // 床の上面を floorY にぴったり一致させる配置
     Composite.add(world, [
       Bodies.rectangle(CONFIG.wall - wallThickness / 2, H / 2, wallThickness, H * 4, staticOpts),
       Bodies.rectangle(W - CONFIG.wall + wallThickness / 2, H / 2, wallThickness, H * 4, staticOpts),
@@ -345,7 +344,7 @@
     if (!world) return null;
     const item = CONFIG.items[level];
     const visualR = item.size / 2;
-    // 見た目同士がしっかり触れ合うよう、物理半径を少し縮小（90%）
+    // 物理コライダーを90%にして隙間なく密着させる
     const colliderR = visualR * 0.90;
     const p = CONFIG.physics;
     
@@ -364,7 +363,7 @@
     body.entered = false;
     body.bornAt = clock;
     body.pop = 0;
-    body.visualRadius = visualR; // 描画・判定用
+    body.visualRadius = visualR;
     Composite.add(world, body);
     State.items.push(body);
     return body;
@@ -627,7 +626,7 @@
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, W, H);
 
-    // 床（生活と備えの土台）
+    // 床
     ctx.fillStyle = 'rgba(255,155,47,.32)';
     ctx.fillRect(0, floorY, W, CONFIG.floor);
     ctx.strokeStyle = INK;
@@ -670,7 +669,7 @@
     ctx.textBaseline = 'bottom';
     ctx.fillText('DANGER LINE', CONFIG.wall + 4, CONFIG.dangerLine - 5);
 
-    // ガイド＆待機アイテム
+    // ガイド＆手元の待機アイテム（currentLevelを描画）
     if (State.mode === 'playing') {
       const r = CONFIG.items[State.currentLevel].size / 2;
       ctx.save();
@@ -802,10 +801,14 @@
     if (State.mode !== 'playing' || !State.canDrop) return;
     Sound.unlock();
 
+    // 1. 今手元にある currentLevel を落とす
     createItem(State.currentLevel, State.aimX, CONFIG.dropY);
     Sound.drop();
 
+    // 2. NEXTアイテムを手元にセット
     State.currentLevel = State.nextLevel;
+
+    // 3. 新しいNEXTアイテムを抽選してUI更新
     State.nextLevel = randomLevel();
     updateNextUI();
 
@@ -926,12 +929,16 @@
     State.canDrop = true;
     State.lastDropAt = clock;
     State.gameStartedAt = Date.now();
+
+    // 手元アイテムと次アイテムを個別に生成
     State.currentLevel = randomLevel();
     State.nextLevel = randomLevel();
+
     ui.score.textContent = pad5(0);
     ui.best.textContent = pad5(State.best);
     ui.chain.classList.remove('is-on');
     if (ui.fxMax) ui.fxMax.classList.remove('is-on');
+
     updateNextUI();
   }
 
