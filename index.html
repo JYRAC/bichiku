@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#FFF3DC">
+<meta name="description" content="BICHIKU（びちく）｜そなえて、つなげて、育てよう。JYRAC 日本若者防災復興協会の防災パズルゲーム">
+<title>BICHIKU｜そなえて、つなげて、育てよう。</title>
+<meta property="og:title" content="BICHIKU｜そなえて、つなげて、育てよう。">
+<meta property="og:description" content="防災アイテムをくっつけて育てる、JYRACの防災パズルゲーム。">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=M+PLUS+Rounded+1c:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+  <div class="frame" id="frame">
+    <!-- TITLE -->
+    <section class="screen screen--title is-active" id="s-title">
+      <div class="title-top">
+        <p class="eyebrow">JYRAC BOSAI PUZZLE</p>
+        <h1 class="logo">BICHIKU</h1>
+        <p class="logo-jp">びちく</p>
+        <p class="tagline">そなえて、つなげて、育てよう。</p>
+      </div>
+      <div class="title-art" id="title-art" aria-hidden="true"></div>
+      <div class="title-menu">
+        <button class="btn btn--play" data-action="play">PLAY</button>
+        <div class="btn-row">
+          <button class="btn btn--sub" data-action="howto">あそびかた</button>
+          <button class="btn btn--sub" data-action="ranking">ランキング</button>
+        </div>
+      </div>
+      <footer class="brand">
+        <span class="brand-mark">JYRAC</span>
+        <span class="brand-name">日本若者防災復興協会</span>
+      </footer>
+    </section>
+
+    <!-- HOW TO PLAY -->
+    <section class="screen screen--sheet" id="s-howto">
+      <header class="sheet-head">
+        <button class="icon-btn" data-action="top" aria-label="トップへ戻る">←</button>
+        <h2>あそびかた</h2>
+        <span class="icon-btn is-ghost" aria-hidden="true"></span>
+      </header>
+      <div class="sheet-body">
+        <ul class="rules">
+          <li><b>土台（床）の上に備えを積み重ねよう！</b><br><span class="rule-sub">安定した足元が、すべての備蓄の基本です。</span></li>
+          <li><b>同じ防災アイテムをくっつけよう！</b></li>
+          <li><b>大きな備蓄をつくるほど高得点！</b></li>
+          <li><b>地域備蓄庫どうしをくっつけると特大ボーナス＆全消去！</b></li>
+          <li><b>危険ラインを超えたらゲームオーバー！</b></li>
+        </ul>
+        <h3 class="sheet-sub">そだてかた</h3>
+        <div class="chain-chart" id="chain-chart"></div>
+        <p class="note">落とせるのは 絆創膏・救急セット・ライト まで。<br>それより上は、くっつけて育てます。<br>最大の「地域備蓄庫」どうしを合体させると盤面から消えて特大ボーナス！</p>
+      </div>
+      <div class="sheet-foot">
+        <button class="btn btn--play" data-action="play">PLAY</button>
+      </div>
+    </section>
+
+    <!-- RANKING -->
+    <section class="screen screen--sheet" id="s-ranking">
+      <header class="sheet-head">
+        <button class="icon-btn" data-action="top" aria-label="トップへ戻る">←</button>
+        <h2>ランキング</h2>
+        <span class="icon-btn is-ghost" aria-hidden="true"></span>
+      </header>
+      <div class="sheet-body">
+        <p class="rank-note">この端末に保存された記録です。</p>
+        <ol class="rank-list" id="rank-list"></ol>
+      </div>
+      <div class="sheet-foot">
+        <button class="btn btn--play" data-action="play">PLAY</button>
+      </div>
+    </section>
+
+    <!-- GAME -->
+    <section class="screen screen--game" id="s-game">
+      <header class="hud">
+        <div class="hud-cell hud-score">
+          <span class="hud-label">SCORE</span>
+          <span class="hud-value" id="ui-score">00000</span>
+        </div>
+        <div class="hud-cell hud-next">
+          <span class="hud-label">NEXT</span>
+          <div class="next-box" id="ui-next"></div>
+        </div>
+        <div class="hud-cell hud-best">
+          <div class="hud-tools">
+            <button class="tool-btn" id="btn-sound" aria-label="音のオンオフ">🔊</button>
+            <button class="tool-btn" id="btn-pause" aria-label="一時停止">❚❚</button>
+          </div>
+          <span class="hud-label">BEST</span>
+          <span class="hud-value hud-value--best" id="ui-best">00000</span>
+        </div>
+      </header>
+      <div class="board-wrap">
+        <canvas id="board" width="400" height="700"></canvas>
+        <div class="fx-chain" id="fx-chain"></div>
+        <div class="fx-max" id="fx-max">
+          <span class="fx-max-jp" id="fx-max-text-jp">地域備蓄庫 完成！</span>
+          <span class="fx-max-en" id="fx-max-text-en">COMMUNITY STOCKPILE!</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- OVERLAYS -->
+    <div class="overlay" id="ov-nickname">
+      <div class="card">
+        <h3 class="card-title">ニックネーム</h3>
+        <p class="card-text">ランキングに表示される名前です。<br>あとから変更できます。</p>
+        <input class="input" id="input-nickname" type="text" maxlength="10" placeholder="10文字まで" autocomplete="off" spellcheck="false">
+        <div class="card-btns">
+          <button class="btn btn--play" data-action="nickname-ok">この名前ではじめる</button>
+          <button class="btn btn--text" data-action="nickname-guest">GUEST であそぶ</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="overlay" id="ov-pause">
+      <div class="card">
+        <h3 class="card-title">一時停止中</h3>
+        <div class="card-btns">
+          <button class="btn btn--play" data-action="resume">つづきから</button>
+          <button class="btn btn--sub" data-action="restart-ask">やり直す</button>
+          <button class="btn btn--text" data-action="top-ask">トップへ戻る</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="overlay" id="ov-confirm">
+      <div class="card">
+        <h3 class="card-title" id="confirm-title">ゲームをやり直しますか？</h3>
+        <p class="card-text" id="confirm-text">いまのスコアは記録されません。</p>
+        <div class="card-btns card-btns--row">
+          <button class="btn btn--sub" data-action="confirm-yes">はい</button>
+          <button class="btn btn--play" data-action="confirm-no">いいえ</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="overlay" id="ov-gameover">
+      <div class="card card--over">
+        <h3 class="card-title card-title--over">GAME OVER</h3>
+        <div class="result">
+          <div class="result-row">
+            <span class="result-label">SCORE</span>
+            <span class="result-score" id="ui-final">00000</span>
+          </div>
+          <div class="result-row result-row--sub">
+            <span class="result-label">BEST</span>
+            <span class="result-best" id="ui-final-best">00000</span>
+          </div>
+          <p class="result-new" id="ui-newbest" hidden>ベスト更新！</p>
+        </div>
+        <div class="tip">
+          <span class="tip-tag">そなえメモ</span>
+          <p class="tip-text" id="ui-tip"></p>
+        </div>
+        <div class="card-btns">
+          <button class="btn btn--play" data-action="retry">もう一度あそぶ</button>
+          <div class="btn-row">
+            <button class="btn btn--sub" data-action="ranking">ランキング</button>
+            <button class="btn btn--sub" data-action="top">トップへ</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="overlay" id="ov-error">
+      <div class="card">
+        <h3 class="card-title">物理エンジンを読み込めません</h3>
+        <p class="card-text">通信環境を確認して、ページを再読み込みしてください。</p>
+        <div class="card-btns">
+          <button class="btn btn--play" onclick="location.reload()">再読み込み</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
