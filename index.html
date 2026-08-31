@@ -31,6 +31,7 @@
         <button class="btn btn--play" data-action="play">PLAY</button>
         <div class="btn-row">
           <button class="btn btn--sub" data-action="howto">あそびかた</button>
+          <button class="btn btn--sub" data-action="zukan">そなえ図鑑</button>
           <button class="btn btn--sub" data-action="ranking">ランキング</button>
         </div>
       </div>
@@ -57,7 +58,23 @@
         </ul>
         <h3 class="sheet-sub">そだてかた</h3>
         <div class="chain-chart" id="chain-chart"></div>
-        <p class="note">落とせるのは 絆創膏・救急セット・ライト まで。<br>それより上は、くっつけて育てます。<br>最大の「防災拠点役所」どうしを合体させると盤面から消えて特大ボーナス！</p>
+        <p class="note">落とせるのは 絆創膏・救急セット・ライト・バッテリー。<br>合体させると防災知識が身につきます！</p>
+      </div>
+      <div class="sheet-foot">
+        <button class="btn btn--play" data-action="play">PLAY</button>
+      </div>
+    </section>
+
+    <!-- ZUKAN (図鑑) -->
+    <section class="screen screen--sheet" id="s-zukan">
+      <header class="sheet-head">
+        <button class="icon-btn" data-action="top" aria-label="トップへ戻る">←</button>
+        <h2>そなえ図鑑</h2>
+        <span class="icon-btn is-ghost" aria-hidden="true"></span>
+      </header>
+      <div class="sheet-body">
+        <p class="rank-note">ゲームに登場する防災アイテムの解説と備えのコツです。</p>
+        <div class="zukan-list" id="zukan-list"></div>
       </div>
       <div class="sheet-foot">
         <button class="btn btn--play" data-action="play">PLAY</button>
@@ -102,6 +119,7 @@
       </header>
       <div class="board-wrap">
         <canvas id="board" width="400" height="700"></canvas>
+        <div class="knowledge-toast" id="ui-toast"></div>
         <div class="fx-chain" id="fx-chain"></div>
         <div class="fx-max" id="fx-max">
           <span class="fx-max-jp" id="fx-max-text-jp">防災拠点 役所 完成！</span>
@@ -149,6 +167,7 @@
       <div class="card card--over">
         <h3 class="card-title card-title--over">GAME OVER</h3>
         <div class="result">
+          <div class="result-rank-badge" id="ui-rank-badge">そなえレベル判定中</div>
           <div class="result-row">
             <span class="result-label">SCORE</span>
             <span class="result-score" id="ui-final">00000</span>
@@ -167,6 +186,7 @@
           <button class="btn btn--play" data-action="retry">もう一度あそぶ</button>
           <div class="btn-row">
             <button class="btn btn--sub" data-action="ranking">ランキング</button>
+            <button class="btn btn--sub" data-action="zukan">図鑑を見る</button>
             <button class="btn btn--sub" data-action="top">トップへ</button>
           </div>
         </div>
