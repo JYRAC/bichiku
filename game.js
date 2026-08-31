@@ -158,7 +158,7 @@
   /* =======================================================
      3. ランキング API (GAS)
      ======================================================= */
-  const GAS_URL = 'https://script.google.com/macros/s/AKfycbzjT8FHlrCMwiST03ZqELqq1TcQ7xbnVx10B84PA6HpH4lK31S85tLzGeQv08tfzTqA/exec';
+  const GAS_URL = 'https://script.google.com/macros/s/AKfycbzMOSTirTbwqpvVHJUWCO3jAIo7q_9HXg13WrpNV5-viWQtUq1H78HIrdashkAN19YI/exec';
   const API_SECRET = 'BICHIKU_2026_SECRET_KEY';
 
   async function generateSignature(name, score, startTime) {
