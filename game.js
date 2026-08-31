@@ -82,6 +82,39 @@
       }
     ],
 
+    quizzes: [
+      {
+        q: '成人が1日に必要とする飲料水の量は1人あたりどれくらい？',
+        opts: ['約1リットル', '約3リットル', '約6リットル'],
+        ans: 1,
+        exp: '飲料水は1人1日3リットルが目安です。3日分で最低9L必要です！'
+      },
+      {
+        q: '地震発生時、家の中で最初に行うべき行動は？',
+        opts: ['まず身を守る（机の下など）', '急いで玄関ドアを開けに行く', '火を消しに台所へ走る'],
+        ans: 0,
+        exp: 'まずは頭部と体を守る（ドロップ・カバー・ホールドオン）が最優先です！'
+      },
+      {
+        q: '水や非常食を消費しながら買い足す備蓄方法を何という？',
+        opts: ['ローテーションストック', 'ローリングストック', 'サイクルパントリー'],
+        ans: 1,
+        exp: '普段から少し多めに買って使い足す「ローリングストック」が推奨されます！'
+      },
+      {
+        q: '災害時の携帯トイレは、1人1日あたり何回分を目安に用意する？',
+        opts: ['2回分', '5回分', '10回分'],
+        ans: 1,
+        exp: '成人の排泄回数は1日平均5回。1週間分なら1人35回分が必要です！'
+      },
+      {
+        q: '大規模地震の後、ブレーカーを落とさずに避難すると危険な理由は？',
+        opts: ['電気がもったいないから', '通電火災が発生する恐れがあるから', '警報が鳴り続けるから'],
+        ans: 1,
+        exp: '停電復旧時に破損した家電や配線から火が出る「通電火災」を防ぐためです！'
+      }
+    ],
+
     messages: [
       '備蓄の基本はまず足元・床の安全から。安定した低い場所にストックを。',
       '家庭では最低3日分、できれば1週間分の備蓄を。',
@@ -216,6 +249,9 @@
                    this.tone({ freq: f, dur: 0.35, type: 'triangle', vol: 0.14, delay: i * 0.09 })); },
     clearMax() { [523, 659, 784, 1047, 1318, 1568].forEach((f, i) =>
                    this.tone({ freq: f, dur: 0.4, type: 'square', vol: 0.14, delay: i * 0.08 })); },
+    quake()    { [220, 260, 196].forEach((f, i) => this.tone({ freq: f, dur: 0.25, type: 'sawtooth', vol: 0.16, delay: i * 0.08 })); },
+    correct()  { [587, 880].forEach((f, i) => this.tone({ freq: f, dur: 0.2, type: 'triangle', vol: 0.15, delay: i * 0.1 })); },
+    wrong()    { this.tone({ freq: 220, to: 110, dur: 0.3, type: 'sawtooth', vol: 0.14 }); },
     over()     { this.tone({ freq: 400, to: 90, dur: 0.75, type: 'sawtooth', vol: 0.13 }); },
     ui()       { this.tone({ freq: 520, dur: 0.06, type: 'sine', vol: 0.08 }); }
   };
@@ -268,6 +304,7 @@
     nickname: $('#ov-nickname'),
     pause:    $('#ov-pause'),
     confirm:  $('#ov-confirm'),
+    quiz:     $('#ov-quiz'),
     gameover: $('#ov-gameover'),
     error:    $('#ov-error')
   };
@@ -317,7 +354,7 @@
     if (toastTimer) clearTimeout(toastTimer);
     toastTimer = setTimeout(function () {
       ui.toast.classList.remove('is-active');
-    }, 2800);
+    }, 3200);
   }
 
   /* =======================================================
@@ -334,12 +371,16 @@
     currentLevel: 0,
     nextLevel: 0,
     highestLevel: 0,
+    nextQuizScore: 4000,
+    nextQuakeScore: 8000,
     aimX: W / 2,
     canDrop: true,
     lastDropAt: 0,
     chain: 0,
     lastMergeAt: 0,
     dangerTimer: 0,
+    shakeTime: 0,
+    shakeOffset: { x: 0, y: 0 },
     items: [],
     particles: [],
     floats: [],
@@ -422,7 +463,7 @@
   }
 
   function removeItem(body) {
-    if (!world) return;
+    if (!world || !body) return;
     Composite.remove(world, body);
     const i = State.items.indexOf(body);
     if (i >= 0) State.items.splice(i, 1);
@@ -462,6 +503,7 @@
       const currentLevel = a.level;
       const wasEntered = a.entered || b.entered;
 
+      // 両方のアイテムを盤面から削除
       removeItem(a);
       removeItem(b);
 
@@ -470,7 +512,8 @@
 
       const mult = CONFIG.chainMultipliers[Math.min(State.chain, CONFIG.chainMultipliers.length - 1)];
 
-      if (currentLevel === MAX_LEVEL) {
+      // 最高ランク（役所）同士の合体消滅処理
+      if (currentLevel >= MAX_LEVEL) {
         const clearGain = Math.round(10000 * mult);
         addScore(clearGain);
         State.floats.push({ x: x, y: y, text: 'PERFECT! +' + clearGain, life: 1300, max: 1300 });
@@ -516,6 +559,18 @@
     if (State.score > State.best) {
       State.best = State.score;
       if (ui.best) ui.best.textContent = pad5(State.best);
+    }
+
+    // クイズ発生判定
+    if (State.score >= State.nextQuizScore && State.mode === 'playing') {
+      State.nextQuizScore += 7000;
+      triggerQuiz();
+    }
+
+    // 余震（地震）発生判定
+    if (State.score >= State.nextQuakeScore && State.mode === 'playing') {
+      State.nextQuakeScore += 12000;
+      triggerEarthquake();
     }
   }
 
@@ -582,7 +637,7 @@
   }
 
   /* =======================================================
-     9. エフェクト
+     9. エフェクト & 地震アクション
      ======================================================= */
   function burst(x, y, color, level) {
     const n = Math.min(8 + level * 2, 24);
@@ -606,7 +661,30 @@
     if (over > 0) State.particles.splice(0, over);
   }
 
+  function triggerEarthquake() {
+    Sound.quake();
+    showToast('🚨 緊急地震速報！揺れに備えて身を守ろう！');
+    State.shakeTime = 1800; // 1.8秒揺れる
+
+    // 盤面上のアイテムに微弱な横揺れ衝撃を加える
+    State.items.forEach(body => {
+      Body.applyForce(body, body.position, {
+        x: (Math.random() - 0.5) * 0.008,
+        y: -0.002
+      });
+    });
+  }
+
   function updateEffects(dt) {
+    if (State.shakeTime > 0) {
+      State.shakeTime -= dt;
+      State.shakeOffset.x = (Math.random() - 0.5) * 12;
+      State.shakeOffset.y = (Math.random() - 0.5) * 6;
+    } else {
+      State.shakeOffset.x = 0;
+      State.shakeOffset.y = 0;
+    }
+
     const ps = State.particles;
     for (let i = ps.length - 1; i >= 0; i--) {
       const p = ps[i];
@@ -630,7 +708,54 @@
   }
 
   /* =======================================================
-     10. 描画
+     10. 防災クイズロジック
+     ======================================================= */
+  function triggerQuiz() {
+    State.mode = 'quiz';
+    const quiz = CONFIG.quizzes[Math.floor(Math.random() * CONFIG.quizzes.length)];
+    const qEl = $('#quiz-question');
+    const optsEl = $('#quiz-options');
+    const fbEl = $('#quiz-feedback');
+
+    if (!qEl || !optsEl || !fbEl) return;
+
+    qEl.textContent = quiz.q;
+    optsEl.textContent = '';
+    fbEl.hidden = true;
+    fbEl.className = 'quiz-feedback';
+
+    quiz.opts.forEach((optText, index) => {
+      const btn = document.createElement('button');
+      btn.className = 'btn btn--quiz-opt';
+      btn.textContent = `${index + 1}. ${optText}`;
+      btn.addEventListener('click', () => {
+        Array.from(optsEl.children).forEach(b => b.disabled = true);
+        
+        if (index === quiz.ans) {
+          Sound.correct();
+          fbEl.textContent = `⭕ 正解！ (+1000点)\n${quiz.exp}`;
+          fbEl.className = 'quiz-feedback is-correct';
+          addScore(1000);
+        } else {
+          Sound.wrong();
+          fbEl.textContent = `❌ 不正解...\n${quiz.exp}`;
+          fbEl.className = 'quiz-feedback is-wrong';
+        }
+        fbEl.hidden = false;
+
+        setTimeout(() => {
+          closeOverlay('quiz');
+          State.mode = 'playing';
+        }, 3000);
+      });
+      optsEl.appendChild(btn);
+    });
+
+    openOverlay('quiz');
+  }
+
+  /* =======================================================
+     11. 描画
      ======================================================= */
   const canvas = $('#board');
   const ctx = canvas.getContext('2d');
@@ -682,6 +807,12 @@
     if (!screens.game || !screens.game.classList.contains('is-active')) return;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, W, H);
+
+    ctx.save();
+    // 地震の揺れオフセットを適用
+    if (State.shakeTime > 0) {
+      ctx.translate(State.shakeOffset.x, State.shakeOffset.y);
+    }
 
     // 背景
     const g = ctx.createLinearGradient(0, 0, 0, H);
@@ -806,12 +937,14 @@
       ctx.fillText(f.text, f.x, f.y);
     }
     ctx.globalAlpha = 1;
+
+    ctx.restore();
   }
 
   function easeOut(t) { return t <= 0 ? 0 : 1 - Math.pow(1 - t, 2); }
 
   /* =======================================================
-     11. 操作
+     12. 操作
      ======================================================= */
   let pointerDown = false;
 
@@ -868,15 +1001,11 @@
     State.lastDropAt = clock;
     Sound.unlock();
 
-    // 1. 今手元にある currentLevel を確実に落とす
     const dropLv = State.currentLevel;
     createItem(dropLv, State.aimX, CONFIG.dropY);
     Sound.drop();
 
-    // 2. NEXTに表示されていたアイテムを手元へ昇格
     State.currentLevel = State.nextLevel;
-
-    // 3. 次のNEXTアイテムを新規抽選してUI更新
     State.nextLevel = randomLevel();
     updateNextUI();
   }
@@ -900,7 +1029,7 @@
   }
 
   /* =======================================================
-     12. ゲームオーバー判定
+     13. ゲームオーバー判定
      ======================================================= */
   function checkDanger(dt) {
     const now = clock;
@@ -933,7 +1062,7 @@
   }
 
   /* =======================================================
-     13. メインループ
+     14. メインループ
      ======================================================= */
   let lastTime = 0;
 
@@ -977,7 +1106,7 @@
   requestAnimationFrame(loop);
 
   /* =======================================================
-     14. ゲームの開始・終了
+     15. ゲームの開始・終了
      ======================================================= */
   function getRankBadge(level) {
     if (level >= 8) return '🎖️ 地域防災リーダー（役所開設）';
@@ -1001,6 +1130,9 @@
     State.dangerTimer = 0;
     State.aimX = W / 2;
     State.highestLevel = 0;
+    State.nextQuizScore = 4000;
+    State.nextQuakeScore = 8000;
+    State.shakeTime = 0;
     State.gameStartedAt = Date.now();
 
     State.currentLevel = randomLevel();
@@ -1063,7 +1195,7 @@
   });
 
   /* =======================================================
-     15. 画面初期化
+     16. 画面初期化
      ======================================================= */
   function buildTitleArt() {
     const box = $('#title-art');
@@ -1168,7 +1300,7 @@
   }
 
   /* =======================================================
-     16. ボタン操作
+     17. ボタン操作
      ======================================================= */
   let confirmCallback = null;
 
@@ -1276,7 +1408,7 @@
   }
 
   /* =======================================================
-     17. 起動
+     18. 起動
      ======================================================= */
   function boot() {
     initPhysics();
