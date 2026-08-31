@@ -35,14 +35,15 @@
     maxParticles: 150,
 
     items: [
-      { key: 'bandage',             name: '絆創膏',             short: '絆創膏',   size: 45,  score: 10,   color: '#F6C89B' },
-      { key: 'firstaid',            name: '救急セット',         short: '救急',     size: 55,  score: 30,   color: '#F4645C' },
-      { key: 'light',               name: 'ライト',             short: 'ライト',   size: 65,  score: 60,   color: '#F9CE5F' },
-      { key: 'battery',             name: 'モバイルバッテリー', short: 'バッテリー', size: 75, score: 120,  color: '#F6A8AF' },
-      { key: 'food',                name: '非常食セット',       short: '非常食',   size: 90,  score: 250,  color: '#A6C486' },
-      { key: 'backpack',            name: '防災リュック',       short: 'リュック', size: 105, score: 500,  color: '#F0574E' },
-      { key: 'home-stockpile',      name: '家庭備蓄',           short: '家庭備蓄', size: 125, score: 1000, color: '#E0AE79' },
-      { key: 'community-stockpile', name: '地域備蓄庫',         short: '地域備蓄', size: 150, score: 3000, color: '#F2A03D' }
+      { key: 'bandage',             name: '絆創膏',             short: '絆創膏',   size: 45,  score: 10,    color: '#F6C89B' },
+      { key: 'firstaid',            name: '救急セット',         short: '救急',     size: 55,  score: 30,    color: '#F4645C' },
+      { key: 'light',               name: 'ライト',             short: 'ライト',   size: 65,  score: 60,    color: '#F9CE5F' },
+      { key: 'battery',             name: 'モバイルバッテリー', short: 'バッテリー', size: 75, score: 120,   color: '#F6A8AF' },
+      { key: 'food',                name: '非常食セット',       short: '非常食',   size: 90,  score: 250,   color: '#A6C486' },
+      { key: 'backpack',            name: '防災リュック',       short: 'リュック', size: 105, score: 500,   color: '#F0574E' },
+      { key: 'home-stockpile',      name: '家庭備蓄',           short: '家庭備蓄', size: 125, score: 1000,  color: '#E0AE79' },
+      { key: 'community-stockpile', name: '地域備蓄庫',         short: '地域備蓄', size: 150, score: 3000,  color: '#F2A03D' },
+      { key: 'city-hall',           name: '防災拠点役所',       short: '防災拠点', size: 175, score: 6000,  color: '#6AAFE6' }
     ],
 
     messages: [
@@ -58,7 +59,7 @@
       '近所の避難所まで、一度歩いてみる。夜道なら、なおいい。',
       '常備薬とお薬手帳のコピーも、りっぱな備蓄です。',
       'トイレは我慢できません。携帯トイレを1人1日5回分。',
-      '自分の地域の備蓄倉庫に何があるか、知っていますか。'
+      '自分の地域の備蓄倉庫と役所の防災拠点がどこにあるか、知っていますか。'
     ]
   };
 
@@ -175,10 +176,10 @@
                  this.tone({ freq: f * 2, dur: 0.08, type: 'sine', vol: 0.06, delay: 0.04 }); },
     chain(n)   { const f = 660 * Math.pow(1.12, Math.min(n, 6));
                  this.tone({ freq: f, to: f * 1.6, dur: 0.16, type: 'square', vol: 0.07 }); },
-    max()      { [523, 659, 784, 1047].forEach((f, i) =>
-                   this.tone({ freq: f, dur: 0.3, type: 'triangle', vol: 0.13, delay: i * 0.09 })); },
-    clearMax() { [523, 659, 784, 1047, 1318].forEach((f, i) =>
-                   this.tone({ freq: f, dur: 0.35, type: 'square', vol: 0.12, delay: i * 0.08 })); },
+    max()      { [523, 659, 784, 1047, 1318].forEach((f, i) =>
+                   this.tone({ freq: f, dur: 0.35, type: 'triangle', vol: 0.14, delay: i * 0.09 })); },
+    clearMax() { [523, 659, 784, 1047, 1318, 1568].forEach((f, i) =>
+                   this.tone({ freq: f, dur: 0.4, type: 'square', vol: 0.14, delay: i * 0.08 })); },
     over()     { this.tone({ freq: 400, to: 90, dur: 0.75, type: 'sawtooth', vol: 0.13 }); },
     ui()       { this.tone({ freq: 520, dur: 0.06, type: 'sine', vol: 0.08 }); }
   };
@@ -419,10 +420,11 @@
       const mult = CONFIG.chainMultipliers[Math.min(State.chain, CONFIG.chainMultipliers.length - 1)];
 
       if (currentLevel === MAX_LEVEL) {
-        const clearGain = Math.round(5000 * mult);
+        // 最高ランク（防災拠点役所）どうしの合体ボーナス
+        const clearGain = Math.round(10000 * mult);
         addScore(clearGain);
-        State.floats.push({ x: x, y: y, text: 'CLEAR! +' + clearGain, life: 1300, max: 1300 });
-        burst(x, y, '#FFD24A', MAX_LEVEL + 2);
+        State.floats.push({ x: x, y: y, text: 'PERFECT! +' + clearGain, life: 1300, max: 1300 });
+        burst(x, y, '#6AAFE6', MAX_LEVEL + 2);
         celebrateClearMax(x, y);
       } else {
         const level = currentLevel + 1;
@@ -469,17 +471,17 @@
 
   function celebrateMax(x, y) {
     Sound.max();
-    if (ui.fxMaxJp) ui.fxMaxJp.textContent = '地域備蓄庫 完成！';
-    if (ui.fxMaxEn) ui.fxMaxEn.textContent = 'COMMUNITY STOCKPILE!';
+    if (ui.fxMaxJp) ui.fxMaxJp.textContent = '防災拠点 役所 完成！';
+    if (ui.fxMaxEn) ui.fxMaxEn.textContent = 'DISASTER HQ COMPLETED!';
     ui.fxMax.classList.remove('is-on');
     void ui.fxMax.offsetWidth;
     ui.fxMax.classList.add('is-on');
     setTimeout(function () { ui.fxMax.classList.remove('is-on'); }, 2100);
 
-    const colors = ['#FFD24A', '#FF9B2F', '#FF5A4E', '#FFF7E8'];
-    for (let i = 0; i < 44; i++) {
+    const colors = ['#6AAFE6', '#FFD24A', '#FF9B2F', '#FFF7E8'];
+    for (let i = 0; i < 50; i++) {
       const a = Math.random() * Math.PI * 2;
-      const sp = 2 + Math.random() * 5;
+      const sp = 2 + Math.random() * 6;
       State.particles.push({
         x: x, y: y,
         vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 2,
@@ -494,21 +496,21 @@
 
   function celebrateClearMax(x, y) {
     Sound.clearMax();
-    if (ui.fxMaxJp) ui.fxMaxJp.textContent = '備蓄完了！ PERFECT!';
-    if (ui.fxMaxEn) ui.fxMaxEn.textContent = 'STOCKPILE CLEARED! +5000';
+    if (ui.fxMaxJp) ui.fxMaxJp.textContent = '地域防災 完全制覇！ PERFECT!';
+    if (ui.fxMaxEn) ui.fxMaxEn.textContent = 'ALL HQ CLEARED! +10000';
     ui.fxMax.classList.remove('is-on');
     void ui.fxMax.offsetWidth;
     ui.fxMax.classList.add('is-on');
     setTimeout(function () { ui.fxMax.classList.remove('is-on'); }, 2100);
 
-    const colors = ['#FFD24A', '#FF5A4E', '#8FBF6E', '#FF9B2F', '#FFFDF7'];
-    for (let i = 0; i < 60; i++) {
+    const colors = ['#6AAFE6', '#FFD24A', '#FF5A4E', '#8FBF6E', '#FFFDF7'];
+    for (let i = 0; i < 70; i++) {
       const a = Math.random() * Math.PI * 2;
-      const sp = 3 + Math.random() * 6;
+      const sp = 3 + Math.random() * 7;
       State.particles.push({
         x: x, y: y,
         vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 3,
-        life: 1100 + Math.random() * 500, max: 1600,
+        life: 1100 + Math.random() * 600, max: 1700,
         size: 4 + Math.random() * 4,
         color: colors[i % colors.length],
         star: true
@@ -521,7 +523,7 @@
      9. エフェクト
      ======================================================= */
   function burst(x, y, color, level) {
-    const n = Math.min(8 + level * 2, 22);
+    const n = Math.min(8 + level * 2, 24);
     for (let i = 0; i < n; i++) {
       const a = (Math.PI * 2 * i) / n + Math.random() * 0.5;
       const sp = 1.6 + Math.random() * 2.8;
@@ -669,7 +671,7 @@
     ctx.textBaseline = 'bottom';
     ctx.fillText('DANGER LINE', CONFIG.wall + 4, CONFIG.dangerLine - 5);
 
-    // ガイド＆手元の待機アイテム（currentLevelを描画）
+    // ガイド＆手元の待機アイテム
     if (State.mode === 'playing') {
       const r = CONFIG.items[State.currentLevel].size / 2;
       ctx.save();
@@ -801,14 +803,10 @@
     if (State.mode !== 'playing' || !State.canDrop) return;
     Sound.unlock();
 
-    // 1. 今手元にある currentLevel を落とす
     createItem(State.currentLevel, State.aimX, CONFIG.dropY);
     Sound.drop();
 
-    // 2. NEXTアイテムを手元にセット
     State.currentLevel = State.nextLevel;
-
-    // 3. 新しいNEXTアイテムを抽選してUI更新
     State.nextLevel = randomLevel();
     updateNextUI();
 
@@ -929,16 +927,12 @@
     State.canDrop = true;
     State.lastDropAt = clock;
     State.gameStartedAt = Date.now();
-
-    // 手元アイテムと次アイテムを個別に生成
     State.currentLevel = randomLevel();
     State.nextLevel = randomLevel();
-
     ui.score.textContent = pad5(0);
     ui.best.textContent = pad5(State.best);
     ui.chain.classList.remove('is-on');
     if (ui.fxMax) ui.fxMax.classList.remove('is-on');
-
     updateNextUI();
   }
 
@@ -994,10 +988,10 @@
     if (!box) return;
     box.textContent = '';
     CONFIG.items.forEach(function (item, i) {
-      const px = Math.round(24 + i * 4.6);
+      const px = Math.round(22 + i * 4.2);
       const node = itemNode(i, px);
       node.style.setProperty('--w', px + 'px');
-      node.style.setProperty('--d', (i * 0.13).toFixed(2) + 's');
+      node.style.setProperty('--d', (i * 0.12).toFixed(2) + 's');
       box.appendChild(node);
     });
   }
@@ -1015,7 +1009,7 @@
       }
       const chip = document.createElement('div');
       chip.className = 'chip';
-      chip.appendChild(itemNode(i, 40));
+      chip.appendChild(itemNode(i, 36));
       const label = document.createElement('span');
       label.textContent = item.name;
       chip.appendChild(label);
