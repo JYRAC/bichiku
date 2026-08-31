@@ -23,13 +23,13 @@
     spawnWeights: [55, 30, 15],
 
     physics: {
-      gravity: 0.9,
-      restitution: 0.05,
-      friction: 0.6,
-      frictionStatic: 0.9,
-      density: 0.003,
-      airFriction: 0.01,
-      slop: 0.05
+      gravity: 1.0,           // 隙間へ押し込む重力
+      restitution: 0.08,      // 跳ね返りを抑えて隙間に自然に沈める
+      friction: 0.02,         // 摩擦を大幅に低減し滑り込みやすくする
+      frictionStatic: 0.03,   // 静止摩擦を下げて途中の引っかかりを防止
+      density: 0.0025,        // 密度
+      airFriction: 0.003,     // 空気抵抗を下げてスムーズに沈降
+      slop: 0.01
     },
 
     maxParticles: 150,
@@ -89,7 +89,7 @@
      3. ランキング API (GAS / 署名付き通信)
      ======================================================= */
   const GAS_URL = 'https://script.google.com/macros/s/AKfycbzjT8FHlrCMwiST03ZqELqq1TcQ7xbnVx10B84PA6HpH4lK31S85tLzGeQv08tfzTqA/exec';
-  const API_SECRET = 'BICHIKU_2026_SECRET_KEY'; // GAS側の設定と同一にするキー
+  const API_SECRET = 'BICHIKU_2026_SECRET_KEY';
 
   async function generateSignature(name, score, startTime) {
     const text = `${name}:${score}:${startTime}:${API_SECRET}`;
@@ -109,7 +109,7 @@
 
       await fetch(GAS_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'text/plain' }, // CORS回避
+        headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify({
           name: playerName,
           score: score,
@@ -315,7 +315,7 @@
     engine.velocityIterations = 16;
     world = engine.world;
 
-    const staticOpts = { isStatic: true, friction: 1.0, restitution: 0.0, label: 'wall' };
+    const staticOpts = { isStatic: true, friction: 0.04, restitution: 0.05, label: 'wall' };
     const wallThickness = 400;
     const floorThickness = 400;
 
@@ -344,9 +344,12 @@
   function createItem(level, x, y) {
     if (!world) return null;
     const item = CONFIG.items[level];
-    const r = item.size / 2;
+    const visualR = item.size / 2;
+    // 見た目同士がしっかり触れ合うよう、物理半径を少し縮小（90%）
+    const colliderR = visualR * 0.90;
     const p = CONFIG.physics;
-    const body = Bodies.circle(x, y, r, {
+    
+    const body = Bodies.circle(x, y, colliderR, {
       label: 'item',
       restitution: p.restitution,
       friction: p.friction,
@@ -361,6 +364,7 @@
     body.entered = false;
     body.bornAt = clock;
     body.pop = 0;
+    body.visualRadius = visualR; // 描画・判定用
     Composite.add(world, body);
     State.items.push(body);
     return body;
@@ -835,7 +839,7 @@
 
     for (let i = 0; i < State.items.length; i++) {
       const b = State.items[i];
-      const top = b.position.y - b.circleRadius;
+      const top = b.position.y - (b.visualRadius || b.circleRadius);
 
       if (!b.entered) {
         const speedSq = b.velocity.x * b.velocity.x + b.velocity.y * b.velocity.y;
@@ -921,7 +925,7 @@
     State.aimX = W / 2;
     State.canDrop = true;
     State.lastDropAt = clock;
-    State.gameStartedAt = Date.now(); // プレイ開始時刻の記録
+    State.gameStartedAt = Date.now();
     State.currentLevel = randomLevel();
     State.nextLevel = randomLevel();
     ui.score.textContent = pad5(0);
@@ -951,7 +955,6 @@
     if (isNew) saveJSON(KEY.best, State.score);
     State.best = Math.max(State.best, State.score);
 
-    // オンライン（GAS）へスコア送信
     await submitScore(State.nickname || 'GUEST', State.score);
 
     ui.final.textContent = pad5(State.score);
@@ -1018,7 +1021,6 @@
     if (!box) return;
     box.textContent = '';
     
-    // 読み込み中表示
     const loadingLi = document.createElement('li');
     loadingLi.className = 'rank-empty';
     loadingLi.textContent = 'ランキングを取得中...';
