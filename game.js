@@ -156,7 +156,7 @@
   }
 
   /* =======================================================
-     3. ランキング API (GAS / 署名付き通信)
+     3. ランキング API (GAS)
      ======================================================= */
   const GAS_URL = 'https://script.google.com/macros/s/AKfycbzjT8FHlrCMwiST03ZqELqq1TcQ7xbnVx10B84PA6HpH4lK31S85tLzGeQv08tfzTqA/exec';
   const API_SECRET = 'BICHIKU_2026_SECRET_KEY';
@@ -270,7 +270,7 @@
   });
 
   function itemNode(level, px) {
-    const item = CONFIG.items[level];
+    const item = CONFIG.items[level] || CONFIG.items[0];
     const img = document.createElement('img');
     img.src = 'assets/' + item.key + '.png';
     img.alt = item.name;
@@ -353,7 +353,7 @@
     ui.toast.classList.add('is-active');
     if (toastTimer) clearTimeout(toastTimer);
     toastTimer = setTimeout(function () {
-      ui.toast.classList.remove('is-active');
+      if (ui.toast) ui.toast.classList.remove('is-active');
     }, 3200);
   }
 
@@ -420,6 +420,7 @@
     ]);
 
     Events.on(engine, 'collisionStart', function (evt) {
+      if (State.mode !== 'playing') return;
       for (let i = 0; i < evt.pairs.length; i++) {
         const a = evt.pairs[i].bodyA, b = evt.pairs[i].bodyB;
         if (!a.isItem || !b.isItem) continue;
@@ -436,7 +437,7 @@
 
   function createItem(level, x, y) {
     if (!world) return null;
-    const item = CONFIG.items[level];
+    const item = CONFIG.items[level] || CONFIG.items[0];
     const visualR = item.size / 2;
     const colliderR = visualR * 0.90;
     const p = CONFIG.physics;
@@ -464,7 +465,9 @@
 
   function removeItem(body) {
     if (!world || !body) return;
-    Composite.remove(world, body);
+    try {
+      Composite.remove(world, body);
+    } catch (e) {}
     const i = State.items.indexOf(body);
     if (i >= 0) State.items.splice(i, 1);
   }
@@ -473,10 +476,10 @@
     const list = State.items;
     for (let i = 0; i < list.length; i++) {
       const a = list[i];
-      if (a.merged) continue;
+      if (!a || a.merged) continue;
       for (let j = i + 1; j < list.length; j++) {
         const b = list[j];
-        if (b.merged || b.level !== a.level) continue;
+        if (!b || b.merged || b.level !== a.level) continue;
         const dx = a.position.x - b.position.x;
         const dy = a.position.y - b.position.y;
         const rr = a.circleRadius + b.circleRadius;
@@ -492,8 +495,11 @@
   function processMerges() {
     if (!mergeQueue.length) return;
     const now = clock;
+    let safetyCounter = 0;
 
-    while (mergeQueue.length) {
+    // フリーズ防止：1フレームあたり最大25回までの合体処理に制限
+    while (mergeQueue.length && safetyCounter < 25) {
+      safetyCounter++;
       const pair = mergeQueue.shift();
       const a = pair[0], b = pair[1];
       if (State.items.indexOf(a) < 0 || State.items.indexOf(b) < 0) continue;
@@ -503,7 +509,7 @@
       const currentLevel = a.level;
       const wasEntered = a.entered || b.entered;
 
-      // 両方のアイテムを盤面から削除
+      // 両アイテムを安全に盤面から削除
       removeItem(a);
       removeItem(b);
 
@@ -512,7 +518,7 @@
 
       const mult = CONFIG.chainMultipliers[Math.min(State.chain, CONFIG.chainMultipliers.length - 1)];
 
-      // 最高ランク（役所）同士の合体消滅処理
+      // 最高ランク（役所）同士の合体消滅
       if (currentLevel >= MAX_LEVEL) {
         const clearGain = Math.round(10000 * mult);
         addScore(clearGain);
@@ -561,13 +567,11 @@
       if (ui.best) ui.best.textContent = pad5(State.best);
     }
 
-    // クイズ発生判定
     if (State.score >= State.nextQuizScore && State.mode === 'playing') {
       State.nextQuizScore += 7000;
       triggerQuiz();
     }
 
-    // 余震（地震）発生判定
     if (State.score >= State.nextQuakeScore && State.mode === 'playing') {
       State.nextQuakeScore += 12000;
       triggerEarthquake();
@@ -590,7 +594,7 @@
       ui.fxMax.classList.remove('is-on');
       void ui.fxMax.offsetWidth;
       ui.fxMax.classList.add('is-on');
-      setTimeout(function () { ui.fxMax.classList.remove('is-on'); }, 2100);
+      setTimeout(function () { if (ui.fxMax) ui.fxMax.classList.remove('is-on'); }, 2100);
     }
 
     const colors = ['#6AAFE6', '#FFD24A', '#FF9B2F', '#FFF7E8'];
@@ -617,7 +621,7 @@
       ui.fxMax.classList.remove('is-on');
       void ui.fxMax.offsetWidth;
       ui.fxMax.classList.add('is-on');
-      setTimeout(function () { ui.fxMax.classList.remove('is-on'); }, 2100);
+      setTimeout(function () { if (ui.fxMax) ui.fxMax.classList.remove('is-on'); }, 2100);
     }
 
     const colors = ['#6AAFE6', '#FFD24A', '#FF5A4E', '#8FBF6E', '#FFFDF7'];
@@ -664,14 +668,15 @@
   function triggerEarthquake() {
     Sound.quake();
     showToast('🚨 緊急地震速報！揺れに備えて身を守ろう！');
-    State.shakeTime = 1800; // 1.8秒揺れる
+    State.shakeTime = 1800;
 
-    // 盤面上のアイテムに微弱な横揺れ衝撃を加える
     State.items.forEach(body => {
-      Body.applyForce(body, body.position, {
-        x: (Math.random() - 0.5) * 0.008,
-        y: -0.002
-      });
+      if (body) {
+        Body.applyForce(body, body.position, {
+          x: (Math.random() - 0.5) * 0.008,
+          y: -0.002
+        });
+      }
     });
   }
 
@@ -703,7 +708,7 @@
     }
     for (let i = 0; i < State.items.length; i++) {
       const b = State.items[i];
-      if (b.pop > 0) b.pop = Math.max(0, b.pop - dt / 190);
+      if (b && b.pop > 0) b.pop = Math.max(0, b.pop - dt / 190);
     }
   }
 
@@ -717,7 +722,10 @@
     const optsEl = $('#quiz-options');
     const fbEl = $('#quiz-feedback');
 
-    if (!qEl || !optsEl || !fbEl) return;
+    if (!qEl || !optsEl || !fbEl) {
+      State.mode = 'playing';
+      return;
+    }
 
     qEl.textContent = quiz.q;
     optsEl.textContent = '';
@@ -746,7 +754,7 @@
         setTimeout(() => {
           closeOverlay('quiz');
           State.mode = 'playing';
-        }, 3000);
+        }, 2800);
       });
       optsEl.appendChild(btn);
     });
@@ -788,7 +796,7 @@
   }
 
   function drawItemAt(level, x, y, angle, scale, alpha) {
-    const item = CONFIG.items[level];
+    const item = CONFIG.items[level] || CONFIG.items[0];
     const r = (item.size / 2) * (scale || 1);
     ctx.save();
     ctx.globalAlpha = alpha === undefined ? 1 : alpha;
@@ -809,7 +817,6 @@
     ctx.clearRect(0, 0, W, H);
 
     ctx.save();
-    // 地震の揺れオフセットを適用
     if (State.shakeTime > 0) {
       ctx.translate(State.shakeOffset.x, State.shakeOffset.y);
     }
@@ -865,8 +872,9 @@
     ctx.fillText('DANGER LINE', CONFIG.wall + 4, CONFIG.dangerLine - 5);
 
     // ガイド＆待機アイテム
-    if (State.mode === 'playing') {
-      const r = CONFIG.items[State.currentLevel].size / 2;
+    if (State.mode === 'playing' || State.mode === 'quiz') {
+      const curLv = Math.max(0, Math.min(MAX_LEVEL, State.currentLevel));
+      const r = CONFIG.items[curLv].size / 2;
       ctx.save();
       ctx.setLineDash([5, 7]);
       ctx.lineWidth = 2;
@@ -878,7 +886,7 @@
       ctx.restore();
 
       const bob = Math.sin(clock / 340) * 2.5;
-      const ready = State.canDrop;
+      const ready = State.canDrop && State.mode === 'playing';
       ctx.save();
       ctx.globalAlpha = ready ? 0.16 : 0.07;
       ctx.fillStyle = INK;
@@ -887,14 +895,16 @@
       ctx.fill();
       ctx.restore();
 
-      drawItemAt(State.currentLevel, State.aimX, CONFIG.dropY + bob, 0, ready ? 1 : 0.86, ready ? 0.95 : 0.4);
+      drawItemAt(curLv, State.aimX, CONFIG.dropY + bob, 0, ready ? 1 : 0.86, ready ? 0.95 : 0.4);
     }
 
     // アイテム
     for (let i = 0; i < State.items.length; i++) {
       const b = State.items[i];
-      const scale = 1 + 0.2 * easeOut(b.pop);
-      drawItemAt(b.level, b.position.x, b.position.y, b.angle, scale, 1);
+      if (b) {
+        const scale = 1 + 0.2 * easeOut(b.pop);
+        drawItemAt(b.level, b.position.x, b.position.y, b.angle, scale, 1);
+      }
     }
 
     // パーティクル
@@ -949,7 +959,8 @@
   let pointerDown = false;
 
   function clampAim(x) {
-    const r = CONFIG.items[State.currentLevel].size / 2;
+    const curLv = Math.max(0, Math.min(MAX_LEVEL, State.currentLevel));
+    const r = CONFIG.items[curLv].size / 2;
     const min = CONFIG.wall + r + 2;
     const max = W - CONFIG.wall - r - 2;
     return Math.max(min, Math.min(max, x));
@@ -1037,6 +1048,7 @@
 
     for (let i = 0; i < State.items.length; i++) {
       const b = State.items[i];
+      if (!b) continue;
       const top = b.position.y - (b.visualRadius || b.circleRadius);
 
       if (!b.entered) {
@@ -1088,7 +1100,7 @@
 
         for (let i = State.items.length - 1; i >= 0; i--) {
           const b = State.items[i];
-          if (b.position.y > floorY + 300 || b.position.x < -300 || b.position.x > W + 300) {
+          if (b && (b.position.y > floorY + 300 || b.position.x < -300 || b.position.x > W + 300)) {
             removeItem(b);
           }
         }
@@ -1118,7 +1130,9 @@
 
   function resetBoard() {
     if (world) {
-      for (let i = State.items.length - 1; i >= 0; i--) Composite.remove(world, State.items[i]);
+      for (let i = State.items.length - 1; i >= 0; i--) {
+        try { Composite.remove(world, State.items[i]); } catch (e) {}
+      }
     }
     State.items.length = 0;
     mergeQueue.length = 0;
